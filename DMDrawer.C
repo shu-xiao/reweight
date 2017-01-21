@@ -16,7 +16,7 @@ int DMDrawer(string input,int option=0){
 	
   TreeReader data(input.data());
   
-  TString Mass=gSystem->GetFromPipe(Form("file=tree/%s; test=${file##*MSC}; test2=${test%%_*}; echo \"$test2\"",input.data()));
+  TString Mass=gSystem->GetFromPipe(Form("file=%s; test=${file##*MZp-}; test2=${test%%_MA0*}; echo \"$test2\"",input.data()));
   cout << "Mass = " << Mass.Data() << endl;
   int mass = atoi(Mass.Data());
   cout << "mass = " << mass << endl;
@@ -26,7 +26,7 @@ int DMDrawer(string input,int option=0){
   float xmin=0;
   float xmax= mass>2000? 10000:2500;
   int nbins = xmax/10.;
-	
+  TCanvas *c1 = new TCanvas();
   th1[0]=new TH1D("genMET_true","genMET_true",nbins,xmin,xmax);
   th1[1]=new TH1D("Higgs_pt","Higgs_pt",nbins,xmin,xmax);
   th1[2]=new TH1D("b0_pt","b0_pt",nbins,xmin,xmax);
@@ -51,13 +51,12 @@ int DMDrawer(string input,int option=0){
 		int DMId=36;
 		
 		for(int i=0;i<nGenPar;i++){
-		        // select higgs boson, genParSt ??	
 			if(genParId[i]==25&&genParSt[i]==22 ){
 				thisJet=(TLorentzVector*)genParP4->At(i);
 				th1[1]->Fill(thisJet->Pt());
 				findThis=true;
 			}
-			
+		        // find DM	
 			if(genParId[i]==DMId&&genParSt[i]==1 ){
 				//cout<<"found";
 				DM1=(TLorentzVector*)genParP4->At(i);
@@ -70,7 +69,7 @@ int DMDrawer(string input,int option=0){
 			}
 			
 			//if(genParSt[i]!=23)continue;
-			// find b
+			// find b ID
                         if(fabs(genParId[i])==5 && bIndex[0]==-1 &&genParSt[i]==23){
 				bIndex[0]=i;
 			}
@@ -79,14 +78,13 @@ int DMDrawer(string input,int option=0){
 			}
 			
 		}
-		TLorentzVector* thisbJet =(TLorentzVector*)genParP4->At(bIndex[0]);
-		TLorentzVector* thatbJet =(TLorentzVector*)genParP4->At(bIndex[1]);
+		TLorentzVector* bJet0 =(TLorentzVector*)genParP4->At(bIndex[0]);
+		TLorentzVector* bJet1 =(TLorentzVector*)genParP4->At(bIndex[1]);
 		
-		th1[2]->Fill(thisbJet->Pt());
-		th1[3]->Fill(thatbJet->Pt());
-		th1[4]->Fill(thisbJet->DeltaR(*thatbJet)); 
-		if(findDM1 && findDM2)
-		  th1[5]->Fill( (*DM1+*DM2).Pt());
+		th1[2]->Fill(bJet0->Pt());
+		th1[3]->Fill(bJet1->Pt());
+		th1[4]->Fill(bJet0->DeltaR(*bJet1)); 
+		if(findDM1 && findDM2)	th1[5]->Fill( (*DM1+*DM2).Pt());
 		//cout<<findThat<<","<<findThis<<endl;
 		// if(findThis && findThat){
 		// 	//cout<<"M="<<(*thisJet+*thatJet).M()<<endl;
@@ -100,11 +98,15 @@ int DMDrawer(string input,int option=0){
 	
 	gSystem->mkdir("output");
 	TFile* output=new TFile(Form("output/%s",input.data()),"recreate");
-	for(int i=0;i<6;i++)th1[i]->Write();
+	for(int i=0;i<6;i++) {
+            th1[i]->Write();
+            th1[i]->Draw();
+            if (i==0) c1->Print("output/higgs.pdf(");
+            if (i==5) c1->Print("output/higgs.pdf)");
+            if (i!=0&&i!=5 ) c1->Print("output/higgs.pdf");
+        }
 	output->Close();
-	
-	
-	return 0;
+        return 0;
 	
 	
 }
