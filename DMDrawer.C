@@ -1,5 +1,4 @@
 
-
 #include "untuplizer.h"
 #include "TH1D.h"
 #include "TClonesArray.h"
@@ -9,14 +8,21 @@
 #include <iostream>
 #include <TSystem.h>
 #include <TString.h>
-
+#include <string>
 using namespace std;
 
 int DMDrawer(string input,int option=0){
 	
   TreeReader data(input.data());
-  
-  TString Mass=gSystem->GetFromPipe(Form("file=%s; test=${file##*MZp-}; test2=${test%%_MA0*}; echo \"$test2\"",input.data()));
+  string fname = input;
+  fname.erase( fname.length()-5,5);
+  cout << "file name is " << fname << endl;
+  cout << "option = " << option << endl;
+  //if (option==0) 
+  //TString Mass=gSystem->GetFromPipe(Form("file=%s; test=${file##*MZp}; test2=${test%%_MA0*}; echo \"$test2\"",input.data()));
+  //else if (option==1)
+      TString Mass=gSystem->GetFromPipe(Form("file=%s; test=${file##*MZp-}; test2=${test%%_MA0*}; echo \"$test2\"",input.data()));
+      
   cout << "Mass = " << Mass.Data() << endl;
   int mass = atoi(Mass.Data());
   cout << "mass = " << mass << endl;
@@ -101,9 +107,9 @@ int DMDrawer(string input,int option=0){
 	for(int i=0;i<6;i++) {
             th1[i]->Write();
             th1[i]->Draw();
-            if (i==0) c1->Print("output/higgs.pdf(");
-            if (i==5) c1->Print("output/higgs.pdf)");
-            if (i!=0&&i!=5 ) c1->Print("output/higgs.pdf");
+            if (i==0) c1->Print(Form("output/%s.pdf",fname.data()));
+            if (i==5) c1->Print(Form("output/%s.pdf",fname.data()));
+            if (i!=0&&i!=5 ) c1->Print(Form("output/%s.pdf",fname.data()));
         }
 	output->Close();
         return 0;

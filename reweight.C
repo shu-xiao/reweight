@@ -14,23 +14,16 @@ void reweight() {
     gStyle->SetLineWidth(2);
     TCanvas *c1 = new TCanvas("c1","c1",800,600); 
     TLegend *leg = new TLegend(0.6,0.7,0.9,0.9);
-    TFile *f_mzp1200 = TFile::Open("gentuple_2HDM_MZp1000_MA0300_MDM100.root");
-    TFile *f_mzp1000 = TFile::Open("gentuple_2HDM_MZp1200_MA0300_MDM100.root");
+    TFile *f_mzp1200_gen = TFile::Open("output/gentuple_2HDM_MZp1000_MA0300_MDM100.root");
+    TFile *f_mzp1000_gen = TFile::Open("output/gentuple_2HDM_MZp1200_MA0300_MDM100.root");
     
-    
-    TTree *f_mzp1000ma0300 = (TTree*) f_mzp1000->Get("tree/treeMaker");
-    TTree *f_mzp1200ma0300 = (TTree*) f_mzp1200->Get("tree/treeMaker");
-    
-    TH1F *h_mzp1000ma0300_gen = new TH1F("h_mzp1000ma0300_gen","",30,0,1500);
-    TH1F *h_mzp1200ma0300_gen = new TH1F("h_mzp1200ma0300_gen","",30,0,1500); 
-    //TH1F *h_mzp1000ma0300_gen = new TH1F();
-    //TH1F *h_mzp1200ma0300_gen = new TH1F();
-    TH1F *ratio = new TH1F("ratio","ratio",30,0,1500);
-    //test->Print();
-    f_mzp1000ma0300->Draw("genMET_true>>h_mzp1000ma0300_gen");//,"","histe");
-    f_mzp1200ma0300->Draw("genMET_true>>h_mzp1200ma0300_gen");
+    TH1F *h_mzp1000ma0300_gen = (TH1F*)f_mzp1000_gen->Get("Higgs_pt");
+    TH1F *h_mzp1200ma0300_gen = (TH1F*)f_mzp1200_gen->Get("Higgs_pt"); 
+    //TH1F *ratio = new TH1F("ratio","ratio",30,0,1500);
     //h_mzp1000ma0300_gen->Smooth(3);
     //h_mzp1200ma0300_gen->Smooth(3);
+    h_mzp1000ma0300_gen->Rebin(8);
+    h_mzp1200ma0300_gen->Rebin(8);
     h_mzp1000ma0300_gen->SetLineColor(3);
     h_mzp1200ma0300_gen->SetLineColor(4);
     h_mzp1000ma0300_gen->SetLineWidth(2);
@@ -43,7 +36,8 @@ void reweight() {
     leg->AddEntry(h_mzp1200ma0300_gen,"MA0 = 300 GeV, MZp = 1200 GeV");
     leg->Draw();
     c1->SetLogy();
-    c1->Print("ratio.pdf");
+    c1->Print("output/ratio.pdf(");
+
     /*
     // smooth
     h_mzp1000ma0300_gen->Smooth();
@@ -54,18 +48,47 @@ void reweight() {
     
     c1->Print("ratio.pdf");
     */
+
     // ratio
-    /*
-    c1->SetLogy(0);
-    TH1F *his2 = (TH1F*)h_mzp1200ma0300_gen->Clone("his2");
-    his2->Divide(h_mzp1000ma0300_gen);
-    his2->SetLineColor(4);
-    his2->SetLineWidth(2);
-    his2->SetXTitle("P_{T} (GeV)");
-    his2->SetYTitle("Ratio (MZp1200/MZp1000)");
-    his2->Draw("hist");
-    c1->Print("ratio.pdf");
+    TH1F *weight = (TH1F*)h_mzp1200ma0300_gen->Clone("weight");
+    weight->Divide(h_mzp1000ma0300_gen);
+    //weight->Smooth(4);
+    weight->SetTitle("ratio");
+    weight->SetLineColor(4);
+    weight->SetLineWidth(2);
+    weight->SetXTitle("P_{T} (GeV)");
+    weight->SetYTitle("Ratio (MZp1200/MZp1000)");
+    weight->Draw("hist");
+    c1->Print("output/ratio.pdf");
     
+    //apply on full simulation
+    c1->SetLogy(1);
+    TFile *f_mzp1000_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1000_MA0-300_13TeV-madgraph.root");
+    //TFile *f_mzp1200_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
+    TH1F *h_mzp1000ma0300_full = (TH1F*)f_mzp1000_full->Get("Higgs_pt");
+    //TH1F *h_mzp1200ma0300_full = (TH1F*)f_mzp1200_full->Get("Higgs_pt");
+    h_mzp1000ma0300_full->Rebin(8);
+
+    TH1F *h_mzp1200ma0300_weight = (TH1F*)h_mzp1000ma0300_full->Clone("h_mzp1200ma0300_weight");
+    h_mzp1200ma0300_weight->Multiply(weight);
+    
+    h_mzp1200ma0300_weight->SetXTitle("P_{T} (GeV)");
+    h_mzp1200ma0300_weight->SetYTitle("Event");
+    h_mzp1000ma0300_full->SetLineWidth(2);
+    h_mzp1200ma0300_weight->SetLineWidth(2);
+    h_mzp1000ma0300_full->SetLineColor(3);
+    h_mzp1200ma0300_weight->SetLineColor(4);
+    h_mzp1200ma0300_weight->SetTitle("reweight");
+    h_mzp1200ma0300_weight->Draw();
+    h_mzp1000ma0300_full->Draw("same");
+    leg->Clear(); 
+    leg->AddEntry(h_mzp1000ma0300_full,"Full MZp = 1000 GeV");
+    leg->AddEntry(h_mzp1200ma0300_weight,"Gen MZp = 1200 GeV");
+    leg->Draw();
+    c1->Print("output/ratio.pdf)");
+
+
+    /*
     // 
     c1->SetLogy();
     TH1F *his_1050 = new TH1F("his_1050","MA0300MZp1050",30,0,1500);
@@ -109,5 +132,6 @@ void reweight() {
         h_mzp1000ma0300_gen->Write();
     htest->Close();
 */
+
 
 }
