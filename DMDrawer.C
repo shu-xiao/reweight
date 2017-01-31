@@ -18,11 +18,10 @@ int DMDrawer(string input,int option=0){
   fname.erase( fname.length()-5,5);
   cout << "file name is " << fname << endl;
   cout << "option = " << option << endl;
-  //if (option==0) 
-  //TString Mass=gSystem->GetFromPipe(Form("file=%s; test=${file##*MZp}; test2=${test%%_MA0*}; echo \"$test2\"",input.data()));
-  //else if (option==1)
-      TString Mass=gSystem->GetFromPipe(Form("file=%s; test=${file##*MZp-}; test2=${test%%_MA0*}; echo \"$test2\"",input.data()));
-      
+  TString Mass;
+  if (option==0) Mass=gSystem->GetFromPipe(Form("file=%s; test=${file##*MZp}; test2=${test%%_MA0*}; echo \"$test2\"",input.data()));
+  else if (option==1)  Mass=gSystem->GetFromPipe(Form("file=%s; test=${file##*MZp-}; test2=${test%%_MA0*}; echo \"$test2\"",input.data()));
+  else return 0;    
   cout << "Mass = " << Mass.Data() << endl;
   int mass = atoi(Mass.Data());
   cout << "mass = " << mass << endl;
@@ -39,10 +38,10 @@ int DMDrawer(string input,int option=0){
   th1[3]=new TH1D("b1_pt","b1_pt",nbins,xmin,xmax);
   th1[4]=new TH1D("deltaR","deltaR",60,0,6);
   th1[5]=new TH1D("genMET_DM","genMET_DM",nbins,xmin,xmax);
-	
+cout << data.GetEntriesFast() << endl;	
 	for(Long64_t jEntry=0; jEntry<data.GetEntriesFast() ;jEntry++){
 		data.GetEntry(jEntry);
-		float genMET_true=data.GetFloat("genMET_true");
+                float genMET_true=data.GetFloat("genMET_true");
 		th1[0]->Fill(genMET_true);
 		
 		TClonesArray* genParP4 = (TClonesArray*) data.GetPtrTObject("genParP4");
@@ -55,7 +54,6 @@ int DMDrawer(string input,int option=0){
 		bool findThis=false, findDM1=false, findDM2=false;
 		
 		int DMId=36;
-		
 		for(int i=0;i<nGenPar;i++){
 			if(genParId[i]==25&&genParSt[i]==22 ){
 				thisJet=(TLorentzVector*)genParP4->At(i);
@@ -84,6 +82,7 @@ int DMDrawer(string input,int option=0){
 			}
 			
 		}
+		//if (jEntry==79213) cout << "scanloop" << endl;
 		TLorentzVector* bJet0 =(TLorentzVector*)genParP4->At(bIndex[0]);
 		TLorentzVector* bJet1 =(TLorentzVector*)genParP4->At(bIndex[1]);
 		
@@ -101,8 +100,7 @@ int DMDrawer(string input,int option=0){
 		
 		
 	}
-	
-	gSystem->mkdir("output");
+	system("mkdir -p output");
 	TFile* output=new TFile(Form("output/%s",input.data()),"recreate");
 	for(int i=0;i<6;i++) {
             th1[i]->Write();
