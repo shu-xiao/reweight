@@ -38,7 +38,6 @@ int DMDrawer(string input,int option=0){
   th1[3]=new TH1D("b1_pt","b1_pt",nbins,xmin,xmax);
   th1[4]=new TH1D("deltaR","deltaR",60,0,6);
   th1[5]=new TH1D("genMET_DM","genMET_DM",nbins,xmin,xmax);
-cout << data.GetEntriesFast() << endl;	
 	for(Long64_t jEntry=0; jEntry<data.GetEntriesFast() ;jEntry++){
 		data.GetEntry(jEntry);
                 float genMET_true=data.GetFloat("genMET_true");
