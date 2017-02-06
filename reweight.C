@@ -14,8 +14,8 @@ void reweight() {
     gStyle->SetLineWidth(2);
     TCanvas *c1 = new TCanvas("c1","c1",800,600); 
     TLegend *leg = new TLegend(0.6,0.7,0.9,0.9);
-    TFile *f_mzp1200_gen = TFile::Open("output/gentuple_2HDM_MZp1000_MA0300_MDM100.root");
-    TFile *f_mzp1000_gen = TFile::Open("output/gentuple_2HDM_MZp1200_MA0300_MDM100.root");
+    TFile *f_mzp1000_gen = TFile::Open("output/gentuple_2HDM_MZp1000_MA0300_MDM100.root");
+    TFile *f_mzp1200_gen = TFile::Open("output/gentuple_2HDM_MZp1200_MA0300_MDM100.root");
     
     TH1F *h_mzp1000ma0300_gen = (TH1F*)f_mzp1000_gen->Get("Higgs_pt");
     TH1F *h_mzp1200ma0300_gen = (TH1F*)f_mzp1200_gen->Get("Higgs_pt"); 
