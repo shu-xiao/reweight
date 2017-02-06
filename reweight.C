@@ -76,7 +76,7 @@ void reweight() {
     TH1F *h_mzp1200ma0300_weight = (TH1F*)h_mzp1000ma0300_full->Clone("h_mzp1200ma0300_weight");
     h_mzp1200ma0300_weight->Multiply(weight);
     
-    h_mzp1200ma0300_weight->SetXTitle("P_{T} (GeV)");
+    h_mzp1200ma0300_weight->SetXTitle("Higgs P_{T} (GeV)");
     h_mzp1200ma0300_weight->SetYTitle("Event");
     h_mzp1000ma0300_full->SetLineWidth(2);
     h_mzp1200ma0300_weight->SetLineWidth(2);
