@@ -28,6 +28,7 @@ void reweight() {
     h_mzp1200ma0300_gen->SetLineColor(4);
     h_mzp1000ma0300_gen->SetLineWidth(2);
     h_mzp1200ma0300_gen->SetLineWidth(2);
+    h_mzp1000ma0300_gen->SetTitle("non-full simulation higgs p_{T}");
     h_mzp1000ma0300_gen->SetXTitle("p_{T} (GeV)");
     h_mzp1000ma0300_gen->SetYTitle("Events");
     h_mzp1000ma0300_gen->Draw();
@@ -64,10 +65,13 @@ void reweight() {
     //apply on full simulation
     c1->SetLogy(1);
     TFile *f_mzp1000_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1000_MA0-300_13TeV-madgraph.root");
+    TFile *f_mzp1200_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
     //TFile *f_mzp1200_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
     TH1F *h_mzp1000ma0300_full = (TH1F*)f_mzp1000_full->Get("Higgs_pt");
+    TH1F *h_mzp1200ma0300_full = (TH1F*)f_mzp1200_full->Get("Higgs_pt");
     //TH1F *h_mzp1200ma0300_full = (TH1F*)f_mzp1200_full->Get("Higgs_pt");
     h_mzp1000ma0300_full->Rebin(8);
+    h_mzp1200ma0300_full->Rebin(8);
 
     TH1F *h_mzp1200ma0300_weight = (TH1F*)h_mzp1000ma0300_full->Clone("h_mzp1200ma0300_weight");
     h_mzp1200ma0300_weight->Multiply(weight);
@@ -76,15 +80,22 @@ void reweight() {
     h_mzp1200ma0300_weight->SetYTitle("Event");
     h_mzp1000ma0300_full->SetLineWidth(2);
     h_mzp1200ma0300_weight->SetLineWidth(2);
-    h_mzp1000ma0300_full->SetLineColor(3);
+    h_mzp1200ma0300_full->SetLineWidth(2);
+
+    h_mzp1000ma0300_full->SetLineColor(2);
     h_mzp1200ma0300_weight->SetLineColor(4);
+    h_mzp1200ma0300_full->SetLineColor(7);
+    
     h_mzp1200ma0300_weight->SetTitle("reweight");
     h_mzp1200ma0300_weight->Draw();
-    h_mzp1000ma0300_full->Draw("same");
+    //h_mzp1000ma0300_full->Draw("same");
+    h_mzp1200ma0300_full->Draw("same");
     leg->Clear(); 
-    leg->AddEntry(h_mzp1000ma0300_full,"Full MZp = 1000 GeV");
-    leg->AddEntry(h_mzp1200ma0300_weight,"Gen MZp = 1200 GeV");
+    //leg->AddEntry(h_mzp1000ma0300_full,"Full MZp = 1000 GeV");
+    leg->AddEntry(h_mzp1200ma0300_weight,"weight MZp = 1200 GeV");
+    leg->AddEntry(h_mzp1200ma0300_full,"Full MZp = 1200 GeV");
     leg->Draw();
+    c1->SaveAs("output/ratio.png");
     c1->Print("output/ratio.pdf)");
 
 

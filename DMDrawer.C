@@ -39,7 +39,8 @@ int DMDrawer(string input,int option=0){
   th1[4]=new TH1D("deltaR","deltaR",60,0,6);
   th1[5]=new TH1D("genMET_DM","genMET_DM",nbins,xmin,xmax);
 	for(Long64_t jEntry=0; jEntry<data.GetEntriesFast() ;jEntry++){
-		data.GetEntry(jEntry);
+	        if (jEntry > 70000) break;
+                data.GetEntry(jEntry);
                 float genMET_true=data.GetFloat("genMET_true");
 		th1[0]->Fill(genMET_true);
 		
@@ -104,8 +105,8 @@ int DMDrawer(string input,int option=0){
 	for(int i=0;i<6;i++) {
             th1[i]->Write();
             th1[i]->Draw();
-            if (i==0) c1->Print(Form("output/%s.pdf",fname.data()));
-            if (i==5) c1->Print(Form("output/%s.pdf",fname.data()));
+            if (i==0) c1->Print(Form("output/%s.pdf(",fname.data()));
+            if (i==5) c1->Print(Form("output/%s.pdf)",fname.data()));
             if (i!=0&&i!=5 ) c1->Print(Form("output/%s.pdf",fname.data()));
         }
 	output->Close();
