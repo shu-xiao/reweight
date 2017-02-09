@@ -39,36 +39,33 @@ void reweight_rebin() {
     //c1->SetLogy();
     TFile *f_mzp1000_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1000_MA0-300_13TeV-madgraph.root");
     TFile *f_mzp1200_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
-    //TFile *f_mzp1200_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
-    Int_t binWidth = 100;
-    Float_t xRange = 2500.;
-    //TH1F *hist = new TH1F("hpt","hpt",TMath::CeilNint(xRange/binWidth),binWidth);
-    float ptbins[] = {0,50,100,150,200,250,300,400,500,600,800,1000};
-    TH1F *h_mzp1200ma0300_weight = new TH1F("hpt","hpt",11,ptbins);
     TH1F *h_mzp1000ma0300_full = (TH1F*)f_mzp1000_full->Get("Higgs_pt");
     TH1F *h_mzp1200ma0300_full = (TH1F*)f_mzp1200_full->Get("Higgs_pt");
     
-    h_mzp1200ma0300_weight = (TH1F*)f_mzp1000_full->Get("Higgs_pt");
+    const Double_t ptbins[] = {0,50,100,150,200,250,300,400,500,600,800,1000};
+    const Int_t nbins1=sizeof(ptbins)/sizeof(ptbins[0])-1; 
+    TH1F *h_mzp1200ma0300_weight = (TH1F*)h_mzp1000ma0300_full->Clone(); 
     h_mzp1200ma0300_weight->Multiply(weight);
-    
-    h_mzp1200ma0300_weight->SetXTitle("p_{T} (GeV)");
-    h_mzp1200ma0300_weight->SetYTitle("Event");
-    h_mzp1000ma0300_full->SetLineWidth(2);
-    h_mzp1200ma0300_weight->SetLineWidth(2);
-    h_mzp1200ma0300_full->SetLineWidth(2);
+    //h_mzp1200ma0300_weight->Rebin(nbins1,ptbins);
 
-    h_mzp1000ma0300_full->SetLineColor(2);
-    h_mzp1200ma0300_weight->SetLineColor(4);
-    h_mzp1200ma0300_full->SetLineColor(7);
+    TH1F *h_mzp1200ma0300_weight_rebin = (TH1F*)(h_mzp1200ma0300_weight->Rebin(11,"h_mzp1200ma0300_weight_rebin",ptbins));
+    TH1F *h_mzp1200ma0300_full_rebin = (TH1F*)(h_mzp1200ma0300_full->Rebin(11,"h_mzp1200ma0300_full_rebin",ptbins));
+     
+    h_mzp1200ma0300_weight_rebin->SetXTitle("p_{T} (GeV)");
+    h_mzp1200ma0300_weight_rebin->SetYTitle("Event");
+    h_mzp1200ma0300_weight_rebin->SetLineWidth(2);
+    h_mzp1200ma0300_full_rebin->SetLineWidth(2);
+    h_mzp1200ma0300_weight_rebin->SetLineColor(4);
+    h_mzp1200ma0300_full_rebin->SetLineColor(7);
     
-    h_mzp1200ma0300_weight->SetTitle("Higgs p_{T} reweight");
-    h_mzp1200ma0300_weight->Draw();
-    //h_mzp1000ma0300_full->Draw("same");
-    h_mzp1200ma0300_full->Draw("same");
+    h_mzp1200ma0300_weight_rebin->SetTitle("Higgs p_{T} reweight");
+    h_mzp1200ma0300_weight_rebin->GetYaxis()->SetTitleOffset(1.5);
+    h_mzp1200ma0300_weight_rebin->Draw();
+    h_mzp1200ma0300_full_rebin->Draw("same");
+    
     leg->Clear(); 
-    //leg->AddEntry(h_mzp1000ma0300_full,"Full MZp = 1000 GeV");
-    leg->AddEntry(h_mzp1200ma0300_weight,"Reweight MZp = 1200 GeV");
-    leg->AddEntry(h_mzp1200ma0300_full,"Full sim MZp = 1200 GeV");
+    leg->AddEntry(h_mzp1200ma0300_weight_rebin,"Reweight MZp = 1200 GeV");
+    leg->AddEntry(h_mzp1200ma0300_full_rebin,"Full sim MZp = 1200 GeV");
     leg->Draw();
     c1->SaveAs("output/ratio_rebin.png");
     c1->Print("output/ratio_rebin.pdf");
