@@ -27,7 +27,7 @@ int DMDrawer(string input,int option=0){
   cout << "mass = " << mass << endl;
 	
   TH1D* th1[20];
-  
+  TH1D* th1_norm[20];
   float xmin=0;
   float xmax= mass>2000? 10000:2500;
   int nbins = xmax/10.;
@@ -41,8 +41,8 @@ int DMDrawer(string input,int option=0){
 	for(Long64_t jEntry=0; jEntry<data.GetEntriesFast() ;jEntry++){
 	        if (jEntry > 70000) break;
                 data.GetEntry(jEntry);
-                float genMET_true=data.GetFloat("genMET_true");
-		th1[0]->Fill(genMET_true);
+                //float genMET_true=data.GetFloat("genMET_true");
+		//th1[0]->Fill(genMET_true);
 		
 		TClonesArray* genParP4 = (TClonesArray*) data.GetPtrTObject("genParP4");
 		int nGenPar=data.GetInt("nGenPar");
@@ -89,7 +89,7 @@ int DMDrawer(string input,int option=0){
 		th1[2]->Fill(bJet0->Pt());
 		th1[3]->Fill(bJet1->Pt());
 		th1[4]->Fill(bJet0->DeltaR(*bJet1)); 
-		if(findDM1 && findDM2)	th1[5]->Fill( (*DM1+*DM2).Pt());
+		//if(findDM1 && findDM2)	th1[5]->Fill( (*DM1+*DM2).Pt());
 		//cout<<findThat<<","<<findThis<<endl;
 		// if(findThis && findThat){
 		// 	//cout<<"M="<<(*thisJet+*thatJet).M()<<endl;
@@ -100,15 +100,27 @@ int DMDrawer(string input,int option=0){
 		
 		
 	}
+        // normalize
+        for (int i=0;i<6;i++){
+            th1_norm[i] = (TH1D*)th1[i]->Clone();
+            double integral = th1_norm[i]->Integral();
+            if (integral>0) th1_norm[i]->Scale(1/integral);
+        }
+
 	system("mkdir -p output");
 	TFile* output=new TFile(Form("output/%s",input.data()),"recreate");
+        output->mkdir("normTo1");
 	for(int i=0;i<6;i++) {
+            //th1[i]->Write();
+            //output->cd("normTo1");
             th1[i]->Write();
-            th1[i]->Draw();
-            if (i==0) c1->Print(Form("output/%s.pdf(",fname.data()));
-            if (i==5) c1->Print(Form("output/%s.pdf)",fname.data()));
-            if (i!=0&&i!=5 ) c1->Print(Form("output/%s.pdf",fname.data()));
+            //output->cd("..");
+            //if (i==0) c1->Print(Form("output/%s.pdf(",fname.data()));
+            //else if (i==5) c1->Print(Form("output/%s.pdf)",fname.data()));
+            //else c1->Print(Form("output/%s.pdf",fname.data()));
         }
+        output->cd("normTo1");
+        for(int i=0;i<6;i++) th1_norm[i]->Write();
 	output->Close();
         return 0;
 	
