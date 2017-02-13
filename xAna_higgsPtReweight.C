@@ -92,15 +92,17 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
     h_mzp1000ma0300_full->Draw("histsame");
     c1->SaveAs("DMD_higgsPt.png");
   */
-    
-    h_mzp1200ma0300_reweight->SetTitle("higgs pt reweight, event by event");
-    h_mzp1200ma0300_reweight->SetXTitle("p_{T} (GeV)");
-    h_mzp1200ma0300_reweight->SetYTitle("Event");
-    h_mzp1200ma0300_reweight->Draw("hist");
-    h_mzp1200ma0300_full->SetLineColor(6);
-    h_mzp1200ma0300_full->Draw("histsame");
-    leg->AddEntry(h_mzp1200ma0300_reweight,"weight MZp = 1200 GeV");
-    leg->AddEntry(h_mzp1200ma0300_full,"Full MZp = 1200 GeV");
+    Double_t ptbins[] = {0,50,100,150,200,250,300,400,500,600,800,1000};
+    TH1F *h_mzp1200ma0300_reweight_rebin = (TH1F*) h_mzp1200ma0300_reweight->Rebin(11,"h_mzp1200ma0300_reweight_rebin",ptbins);
+    TH1F *h_mzp1200ma0300_full_rebin = (TH1F*) h_mzp1200ma0300_full->Rebin(11,"h_mzp1200ma0300_full_rebin",ptbins);
+    h_mzp1200ma0300_reweight_rebin->SetTitle("higgs pt reweight, event by event");
+    h_mzp1200ma0300_reweight_rebin->SetXTitle("p_{T} (GeV)");
+    h_mzp1200ma0300_reweight_rebin->SetYTitle("Event");
+    h_mzp1200ma0300_reweight_rebin->Draw("hist");
+    h_mzp1200ma0300_full_rebin->SetLineColor(6);
+    h_mzp1200ma0300_full_rebin->Draw("histsame");
+    leg->AddEntry(h_mzp1200ma0300_reweight_rebin,"weight MZp = 1200 GeV");
+    leg->AddEntry(h_mzp1200ma0300_full_rebin,"Full MZp = 1200 GeV");
     leg->Draw();
 
     //save output
