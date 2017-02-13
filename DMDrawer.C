@@ -100,6 +100,7 @@ int DMDrawer(string input,int option=0){
 		
 		
 	}
+        th1[1]->Draw("hist");
         // normalize
         for (int i=0;i<6;i++){
             th1_norm[i] = (TH1D*)th1[i]->Clone();

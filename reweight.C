@@ -36,8 +36,8 @@ void reweight() {
     leg->AddEntry(h_mzp1000ma0300_gen,"MA0 = 300 GeV, MZp = 1000 GeV");
     leg->AddEntry(h_mzp1200ma0300_gen,"MA0 = 300 GeV, MZp = 1200 GeV");
     leg->Draw();
-    c1->SetLogy();
-    c1->Print("output/ratio.pdf(");
+    //c1->SetLogy();
+    c1->Print("output/reweight.pdf(");
 
     /*
     // smooth
@@ -61,9 +61,10 @@ void reweight() {
     weight->SetYTitle("Ratio (MZp1200/MZp1000)");
     weight->Draw("hist");
     c1->Print("output/ratio.pdf");
+    //c1->SaveAs("ratio_reweight.png");
     
     //apply on full simulation
-    c1->SetLogy(1);
+    //c1->SetLogy(1);
     TFile *f_mzp1000_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1000_MA0-300_13TeV-madgraph.root");
     TFile *f_mzp1200_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
     //TFile *f_mzp1200_full = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
@@ -95,8 +96,8 @@ void reweight() {
     leg->AddEntry(h_mzp1200ma0300_weight,"weight MZp = 1200 GeV");
     leg->AddEntry(h_mzp1200ma0300_full,"Full MZp = 1200 GeV");
     leg->Draw();
-    c1->SaveAs("output/ratio.png");
-    c1->Print("output/ratio.pdf)");
+    //c1->SaveAs("output/reweight.png");
+    c1->Print("output/reweight.pdf)");
 
 
     /*
