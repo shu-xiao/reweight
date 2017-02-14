@@ -46,20 +46,12 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
 
     Double_t ratioBin[51];
     for (int i=0;i<51;i++)  ratioBin[i] = i*20;
-    TH1F *ratio = (TH1F*)h_mzp1200ma0300_gen->Clone("ratio");
-    ratio->Divide(h_mzp1000ma0300_gen);
-    //TGraphAsymmErrors *ratio_rebin = new TGraphAsymmErrors(h_mzp1200ma0300_gen,h_mzp1000ma0300_gen);
-    TH1F *ratio1 = (TH1F*)h_mzp1200ma0300_gen_1->Clone("ratio1");
-    ratio1->Divide(h_mzp1000ma0300_gen_1);
-    //h_mzp1000ma0300_gen->Draw("hist");
-    //h_mzp1200ma0300_gen->Draw("histsame");
-    /*ratio1->Draw();
-    c1->SaveAs("weight_norm1.png");
-    ratio->Draw();
-    c1->SaveAs("weight_event.png");
-*/
-    TH1F *ratio_rebin = (TH1F*)ratio->Rebin(50,"ratio_rebin",ratioBin);
-    //ratio_rebin->Draw();
+    //TH1F *ratio = (TH1F*)h_mzp1200ma0300_gen->Clone("ratio");
+    //ratio->Divide(h_mzp1000ma0300_gen);
+    TH1F *h_mzp1000ma0300_gen_rebin = (TH1F*)h_mzp1000ma0300_gen_1->Rebin(50,"h_mzp1000ma0300_gen_rebin",ratioBin);
+    TH1F *h_mzp1200ma0300_gen_rebin = (TH1F*)h_mzp1200ma0300_gen_1->Rebin(50,"h_mzp1200ma0300_gen_rebin",ratioBin);
+    TH1F *ratio = (TH1F*)h_mzp1200ma0300_gen_rebin->Clone("ratio");
+    ratio->Divide(h_mzp1000ma0300_gen_rebin);
   
     //Event loop
     for(Long64_t jEntry=0; jEntry<data.GetEntriesFast() ;jEntry++){
@@ -78,8 +70,9 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
 	        thisJet=(TLorentzVector*)genParP4->At(it);
                 double higgsPt = thisJet->Pt();
 	        double eventWeight = 1;
-                eventWeight = getWeight(ratio_rebin, higgsPt);
+                eventWeight = getWeight(ratio, higgsPt);
                 h_mzp1200ma0300_reweight->Fill(higgsPt,eventWeight);
+                //cout << higgsPt << "\t" << eventWeight << endl;
                 h_mzp1000ma0300_refill->Fill(higgsPt);
 	    }
         }
@@ -95,16 +88,23 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
     Double_t ptbins[] = {0,50,100,150,200,250,300,400,500,600,800,1000};
     TH1F *h_mzp1200ma0300_reweight_rebin = (TH1F*) h_mzp1200ma0300_reweight->Rebin(11,"h_mzp1200ma0300_reweight_rebin",ptbins);
     TH1F *h_mzp1200ma0300_full_rebin = (TH1F*) h_mzp1200ma0300_full->Rebin(11,"h_mzp1200ma0300_full_rebin",ptbins);
-    h_mzp1200ma0300_reweight_rebin->SetTitle("higgs pt reweight, event by event");
+    h_mzp1200ma0300_reweight_rebin->SetTitle("Higgs pt reweight, event by event");
     h_mzp1200ma0300_reweight_rebin->SetXTitle("p_{T} (GeV)");
-    h_mzp1200ma0300_reweight_rebin->SetYTitle("Event");
+    h_mzp1200ma0300_reweight_rebin->SetYTitle("normalize to 1");
+    
+    
+    h_mzp1200ma0300_reweight_rebin->Scale(1./(h_mzp1200ma0300_reweight_rebin->Integral()));
+    h_mzp1200ma0300_full_rebin->Scale(1./(h_mzp1200ma0300_full_rebin->Integral()));
     h_mzp1200ma0300_reweight_rebin->Draw("hist");
     h_mzp1200ma0300_full_rebin->SetLineColor(6);
+    h_mzp1200ma0300_reweight_rebin->SetLineWidth(2);
+    h_mzp1200ma0300_full_rebin->SetLineWidth(2);
     h_mzp1200ma0300_full_rebin->Draw("histsame");
     leg->AddEntry(h_mzp1200ma0300_reweight_rebin,"weight MZp = 1200 GeV");
     leg->AddEntry(h_mzp1200ma0300_full_rebin,"Full MZp = 1200 GeV");
     leg->Draw();
-
+    c1->SaveAs("output/event_higgsPtReweight.png");
+    c1->Print("output/event_higgsPtReweight.pdf");
     //save output
     //TString endfix=gSystem->GetFromPipe(Form("file=%s; echo \"${file##*/}\"",inputFile.data()));
     //TString outputFile = "muHisto_" + endfix;
