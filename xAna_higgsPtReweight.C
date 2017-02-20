@@ -37,6 +37,7 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
 
     //get TTree from file ...
     TreeReader data(inputFile.data());
+    TreeReader data1("ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
     gStyle->SetOptStat(0);
     gStyle->SetLineWidth(2);
     TCanvas *c1 = new TCanvas("c1","c1",800,600); 
@@ -46,6 +47,7 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
     file[1] = TFile::Open("output/gentuple_2HDM_MZp1200_MA0300_MDM100.root");
     file[2] = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1000_MA0-300_13TeV-madgraph.root");
     file[3] = TFile::Open("output/ZprimeToA0hToA0chichihbb_2HDM_MZp-1200_MA0-300_13TeV-madgraph.root");
+    // create and set histogram
     string hName[4] = {"FATjetPt","Higgs_pt","rawMET","corrMET"};
     TH1F *hist[4][8];
     TH1F *h_reweight[8], *ratio[4];
@@ -63,12 +65,11 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
     }
     Double_t ratioBin[51];
     for (int i=0;i<51;i++)  ratioBin[i] = i*20;
-    //ratio[1] = getRatio(hist[1][1],hist[0][1],50,ratioBin);
-
-    for (int i=0;i<4;i++)  ratio[i] = getRatio(hist[1][i],hist[0][i],50,ratioBin);
-    /*
-    // test root bug
-    ratio[0]->Draw();
+    // get ratio histogram without fatjet
+    for (int i=1;i<4;i++)  ratio[i] = getRatio(hist[1][i],hist[0][i],50,ratioBin);
+    
+    // test root bug, ignore it
+    /*ratio[0]->Draw();
     //c1->Print("test.pdf");
     c1->SaveAs("test0.png");
     c1->Clear();
@@ -77,32 +78,62 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
     //c1->Print("test1.pdf");
     c1->SaveAs("test1.png");
     */
-    //Event loop
+
+    // mzp = 1200, process fat jet pt
+    for(Long64_t jEntry=0; jEntry<data1.GetEntriesFast() ;jEntry++){
+        if (jEntry > 70000) break;
+        data1.GetEntry(jEntry); 
+	TClonesArray* FATjetP4 = (TClonesArray*) data1.GetPtrTObject("FATjetP4");
+	int nFatJet=data1.GetInt("FATnJet");
+	TLorentzVector* fatJet;
+	for(int i=0;i<nFatJet;i++){
+	    fatJet=(TLorentzVector*)FATjetP4->At(i);
+            Double_t fatJetPt = fatJet->Pt();
+            if (jEntry<35000) {
+                hist[1][0]->Fill(fatJetPt);
+            }
+            else {
+                hist[3][0]->Fill(fatJetPt);
+            }
+        }
+    }
+
+    hist[3][0]->Scale(1./(hist[3][0]->Integral()));
+    hist[1][0]->Scale(1./(hist[1][0]->Integral()));
+    
+    // mzp = 1000
     for(Long64_t jEntry=0; jEntry<data.GetEntriesFast() ;jEntry++){
         if (jEntry > 70000) break;
         if (jEntry % 35000 == 0) fprintf(stderr, "Processing event %lli of %lli\n", jEntry + 1, data.GetEntriesFast());
         data.GetEntry(jEntry); 
-        // find Higgs pt
         TClonesArray* genParP4 = (TClonesArray*) data.GetPtrTObject("genParP4");
-	TClonesArray* FATjetP4;
 	int nGenPar=data.GetInt("nGenPar");
-	int nFatJet;
 	int *genParSt=data.GetPtrInt("genParSt");
 	int *genParId=data.GetPtrInt("genParId");
-	Float_t rawMET,corrMET;
-        rawMET = data.GetFloat("pfMetRawPt");
-	corrMET = data.GetFloat("pfMetCorrPt");
-        FATjetP4 = (TClonesArray*) data.GetPtrTObject("FATjetP4");
-	nFatJet=data.GetInt("FATnJet");
+	Float_t rawMET = data.GetFloat("pfMetRawPt");
+	Float_t corrMET = data.GetFloat("pfMetCorrPt");
+        TClonesArray *FATjetP4 = (TClonesArray*) data.GetPtrTObject("FATjetP4");
+	int nFatJet=data.GetInt("FATnJet");
 	TLorentzVector* thisJet, *fatJet;
-	int DMId=36;
-        if (jEntry>35000) {
-	    for(int i=0;i<nFatJet;i++){
-		fatJet=(TLorentzVector*)FATjetP4->At(i);
-                Double_t fatJetRatio = getWeight(ratio[0],fatJet->Pt());
-	        h_reweight[0]->Fill(fatJet->Pt(),fatJetRatio);
+	// fat jet
+        for(int i=0;i<nFatJet;i++){
+	    fatJet=(TLorentzVector*)FATjetP4->At(i);
+            Double_t fatJetPt = fatJet->Pt();
+            if (jEntry<35000) {
+                hist[0][0]->Fill(fatJetPt);
+            }
+            // skip a event for the convenience of coding 
+            else if (jEntry==35000) {
+                hist[0][0]->Scale(1./(hist[0][0]->Integral()));
+                ratio[0] = getRatio(hist[1][0],hist[0][0],50,ratioBin);
+            }
+            else {
+                hist[2][0]->Fill(fatJetPt);
+                Double_t fatJetRatio = getWeight(ratio[0],fatJetPt);
+	        h_reweight[0]->Fill(fatJetPt,fatJetRatio);
             }
         }
+        // MET and higgs pt
         for(int it=0, n=0; it< nGenPar; it++){
 	    if(genParId[it]==25&&genParSt[it]==22 ){
 	        thisJet=(TLorentzVector*)genParP4->At(it);
@@ -120,16 +151,18 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
             }
         }
     } // end of loop over entries
+    
+    hist[2][0]->Scale(1./(hist[2][0]->Integral()));
     Double_t ptbins[] = {0,50,100,150,200,250,300,400,500,600,800,1000};
     // histogram setting
     for (int i=0;i<4;i++) {    
         leg->Clear();
         h_reweight[i+4] = (TH1F*) h_reweight[i]->Rebin(11,Form("h_reweight[%d]",i+4),ptbins);
         hist[3][i+4] = (TH1F*) hist[3][i]->Rebin(11,Form("hist[3][%d]",i+4),ptbins);
-        h_reweight[i+4]->Scale(1./(h_reweight[i]->Integral()));
+        h_reweight[i+4]->Scale(1./(h_reweight[i+4]->Integral()));
         if (i==0 or i==1) h_reweight[i+4]->SetXTitle("p_{T} (GeV)");
         if (i==2 or i==3) h_reweight[i+4]->SetXTitle("E_{T}^{miss} (GeV)");
-        h_reweight[i+4]->SetMaximum(getYMax(h_reweight[i+4],hist[3][i+4])*1.1);
+        h_reweight[i+4]->SetMaximum(getYMax(h_reweight[i+4],hist[3][i+4])*1.05);
         h_reweight[i+4]->SetYTitle("normalize to 1");
         h_reweight[i+4]->GetYaxis()->SetTitleOffset(1.3);
         h_reweight[i+4]->SetLineColor(1);
@@ -141,17 +174,21 @@ void xAna_higgsPtReweight(string inputFile="ZprimeToA0hToA0chichihbb_2HDM_MZp-10
         leg->AddEntry(h_reweight[i+4],"weight MZp = 1200 GeV");
         leg->AddEntry(hist[3][i],"Full MZp = 1200 GeV");
         leg->Draw();
-        c1->SaveAs(Form("overlap%d.png",i));
+        c1->SaveAs(Form("output/reweight_h%d.png",i));
+        //if (i==0) c1->Print("output/reweightEvent.pdf(");
+        //else if (i==4) c1->Print("output/reweightEvent.pdf)");
+        //else c1->Print("output/reweightEvent.pdf");
     }
-    //c1->SaveAs("output/event_higgsPtReweight.png");
-    //c1->Print("output/event_higgsPtReweight.pdf");
     //save output
     //TString endfix=gSystem->GetFromPipe(Form("file=%s; echo \"${file##*/}\"",inputFile.data()));
     //TString outputFile = "muHisto_" + endfix;
-    /*
     TFile* outFile = new TFile("output/eventWeight.root","recreate");
-    h_hpt_mzp1000->Write();
-    h_hpt_mzp1200->Write();
+    for (int h=0;h<8;h++) h_reweight[h]->Write();
+    for (int f=0;f<4;f++) {
+        for (int h=0;h<4;h++) {
+            hist[f][h]->Write();
+        }
+    }
+    for (int i=0;i<4;i++) ratio[i]->Write();
     outFile->Close();
-*/
 }
